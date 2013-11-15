@@ -1,0 +1,636 @@
+'From Cuis 4.2 of 25 July 2013 [latest update: #1867] on 15 November 2013 at 9:17:35.580415 am'!
+'Description Please enter a description for this package'!
+!provides: 'MiniToDo' 1 1!
+!classDefinition: #MiniToDo category: #MiniToDo!
+Object subclass: #MiniToDo
+	instanceVariableNames: 'tasks list selectedIndex'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'MiniToDo'!
+!classDefinition: 'MiniToDo class' category: #MiniToDo!
+MiniToDo class
+	instanceVariableNames: ''!
+
+!classDefinition: #SistemaTareas category: #MiniToDo!
+Object subclass: #SistemaTareas
+	instanceVariableNames: 'tareas list selectedIndex'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'MiniToDo'!
+!classDefinition: 'SistemaTareas class' category: #MiniToDo!
+SistemaTareas class
+	instanceVariableNames: ''!
+
+!classDefinition: #Tarea category: #MiniToDo!
+Object subclass: #Tarea
+	instanceVariableNames: 'descripcion'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'MiniToDo'!
+!classDefinition: 'Tarea class' category: #MiniToDo!
+Tarea class
+	instanceVariableNames: ''!
+
+!classDefinition: #Task category: #MiniToDo!
+Object subclass: #Task
+	instanceVariableNames: 'description'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'MiniToDo'!
+!classDefinition: 'Task class' category: #MiniToDo!
+Task class
+	instanceVariableNames: ''!
+
+
+!MiniToDo commentStamp: '<historical>' prior: 0!
+Very simple task administration system.
+
+Developed mainly as a learning-project. A lot of features must be added.
+
+Sorry by the "spanglish" mix :)
+
+Need a PluggableListMorph.
+
+To start the app, evaluate:
+
+SistemaTareas new initialize openAViewOnMe
+
+Programmer: Germán S. Arduino
+Date: Octubre 2003
+Last Modificaton: February 2004!
+
+!SistemaTareas commentStamp: 'gsa 2/7/2004 10:20' prior: 0!
+Very simple task administration system.
+
+Developed mainly as a learning-project. A lot of features must be added.
+
+Sorry by the "spanglish" mix :)
+
+Need a PluggableListMorph.
+
+To start the app, evaluate:
+
+SistemaTareas new initialize openAViewOnMe
+
+Programmer: Germán S. Arduino
+Date: Octubre 2003
+Last Modificaton: February 2004!
+
+!Tarea commentStamp: 'gsa 2/7/2004 10:14' prior: 0!
+Task object: The task that administer the system.!
+
+!MiniToDo methodsFor: 'adding' stamp: 'gsa 11/15/2013 08:51'!
+addSampleTasks
+	| newTask |
+	newTask := Task new.
+	newTask description: 'Sample Task 1'.
+	self tasks add: newTask.
+	newTask := Task new.
+	newTask description: 'Sample Task 2'.
+	self tasks add: newTask.
+	newTask := Task new.
+	newTask description: 'Sample Task 3'.
+	self tasks add: newTask.! !
+
+!MiniToDo methodsFor: 'adding' stamp: 'gsa 11/15/2013 08:40'!
+addTask
+	| newTask newDescription |
+	newTask := Task new.
+	newDescription := FillInTheBlankMorph request: 'Type the new task description'.
+	"Lo siguientes es para evitar descripciones en blanco"
+	"Falta ver si se puede detectar de mejor forma si se presionó el 
+	Cancel del FillInTheBlank"
+	newDescription size = 0
+		ifFalse: [newTask description: newDescription.
+			self tareas add: newTask.
+			self refreshList]! !
+
+!MiniToDo methodsFor: 'objects from disk' stamp: 'gsa 11/15/2013 08:14'!
+createHtmlTaskList
+
+| dir fileName |
+
+fileName := 'mistareas.html'.
+
+dir := FileDirectory default.
+
+(dir fileExists: fileName) ifTrue:[ dir deleteFileNamed: fileName ].
+
+fileName := dir newFileNamed: fileName.
+
+fileName nextPutAll: '<html>';cr; nextPut: Character lf;
+	nextPutAll: '<head>';cr; nextPut: Character lf;
+	nextPutAll: '<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">';cr; nextPut: Character lf;
+	nextPutAll: '<title>Tareas Pendientes</title>';cr; nextPut: Character lf;
+	nextPutAll: '</head>';cr; nextPut: Character lf;
+	nextPutAll: '<body>';cr; nextPut: Character lf;
+	nextPutAll: '<h2>Tareas Pendientes</h2>';cr; nextPut: Character lf;
+	nextPutAll: '<hr>';cr;nextPut: Character lf;
+	nextPutAll: '<ul>';cr; nextPut: Character lf.
+
+	"nextPutAll: '<li>',newCollection,'</li>';cr; nextPut: Character lf;"
+
+ 	self  tareas do: [:each | fileName nextPutAll: '<li>',each descripcion,'</li>';cr; nextPut: Character lf.].
+
+
+	"nextPutAll: (self tareas do: [:each | '<li>',each descripcion,'</li>';cr; nextPut: Character lf]); "
+
+fileName
+	nextPutAll: '</ul>';cr; nextPut: Character lf;
+	nextPutAll: '</body>';cr; nextPut: Character lf;
+	nextPutAll: '</html>';cr; nextPut: Character lf;
+	nextPutAll: '<hr>','Generado por MiniToDo','<hr>';cr; nextPut: Character lf.
+fileName  close.
+"Win32Shell new shellOpen: fileName."
+
+
+
+
+
+
+
+
+
+! !
+
+!MiniToDo methodsFor: 'objects from disk' stamp: 'gsa 11/15/2013 08:14'!
+dataIn
+|rr|
+rr := ReferenceStream fileNamed: 'SistemaTareas.obj'.
+self tareas: rr next.
+rr close.
+
+self refreshList.
+
+! !
+
+!MiniToDo methodsFor: 'objects from disk' stamp: 'gsa 11/15/2013 08:14'!
+dataOut
+|rr|
+rr := ReferenceStream fileNamed: 'SistemaTareas.obj'.
+rr nextPut: self tareas.
+rr close.
+! !
+
+!MiniToDo methodsFor: 'removing' stamp: 'gsa 11/15/2013 09:12'!
+deleteTask
+	| aTask aTaskDescription |
+	aTaskDescription := list at: selectedIndex.
+	aTask := (self tareas
+				detect: [:each | each descripcion = aTaskDescription]).
+	tasks remove: aTask.
+	self refreshList! !
+
+!MiniToDo methodsFor: 'initializing' stamp: 'gsa 11/15/2013 08:14'!
+initialize
+	self agregarTareas.
+	list := (self tareas
+				collect: [:each | each descripcion])
+				asSortedCollection: [:a :b | a = b].
+	selectedIndex := 1! !
+
+!MiniToDo methodsFor: 'initializing' stamp: 'gsa 11/15/2013 08:49'!
+initializeTasks
+	"Private - Initializes the receiver's tasks."
+	tasks := Bag new! !
+
+!MiniToDo methodsFor: 'accessing' stamp: 'gsa 11/15/2013 08:14'!
+list
+	^list! !
+
+!MiniToDo methodsFor: 'accessing' stamp: 'gsa 11/15/2013 08:14'!
+listIndex
+	^ selectedIndex! !
+
+!MiniToDo methodsFor: 'accessing' stamp: 'gsa 11/15/2013 08:14'!
+listIndex: anInteger 
+	selectedIndex := anInteger.
+		self changed: #listIndex! !
+
+!MiniToDo methodsFor: 'user interface' stamp: 'gsa 11/15/2013 09:17'!
+listMenu: aMenu 
+	"-------------------------------------------------------------------------------------"
+	"Si el menu se despliega sin ninguna tarea seleccionada sólo  
+	ofrece la posibilidad de Agregar Tarea"
+	"-------------------------------------------------------------------------------------"
+	"Aqui también identifico targetTask, la tarea seleccionada,  
+	sobre la cual operamos"
+	"-------------------------------------------------------------------------------------"
+	| differentMenu targetTask tinyMenu |
+	self.
+	targetTask := list
+				at: selectedIndex
+				ifAbsent: [tinyMenu := MenuMorph new.
+					tinyMenu
+						add: 'Agregar Tarea'
+						target: self
+						selector: #addTask;
+						add: 'Ayuda'
+						target: self
+						selector: #showHelp.
+					^ tinyMenu].
+	differentMenu := MenuMorph new.
+	"selector indica el método que se ejecuta en target"
+	differentMenu
+		add: 'Agregar Tarea'
+		target: self
+		selector: #addTask;
+		
+		add: 'Eliminar Tarea'
+		target: self
+		selector: #deleteTask;
+		
+		add: 'Modificar Tarea'
+		target: self
+		selector: #modifyTask;
+
+		add: 'Generar Lista de Tareas como p·gina web'
+		target: self
+		selector: #createHtmlTaskList;
+		
+		add: 'Ayuda'
+		target: self
+		selector: #showHelp;
+
+		add: 'Exportar Tareas'
+		target: self
+		selector: #dataOut;
+		
+		add: 'Importar Tareas'
+		target: self
+		selector: #dataIn;
+
+		add: 'explore'
+		target: targetTask
+		selector: #explore.
+	^ differentMenu! !
+
+!MiniToDo methodsFor: 'updating' stamp: 'gsa 11/15/2013 09:14'!
+modifyTask
+	| aTask aTaskDescription aTaskNewDescription |
+	aTaskDescription := list at: selectedIndex.
+	aTask := self tareas
+				detect: [:each | each descripcion = aTaskDescription].
+	aTaskNewDescription := FillInTheBlankMorph request: 'Modifique la descripción de la Tarea' initialAnswer: aTaskDescription.
+	"Lo siguiente es para evitar descripciones en blanco"
+	"Falta ver si se puede detectar de mejor forma si se presionó el  
+	Cancel del FillInTheBlank"
+	aTaskNewDescription size = 0
+		ifFalse: [aTask descripcion: aTaskNewDescription.
+			self refreshList]! !
+
+!MiniToDo methodsFor: 'help' stamp: 'gsa 11/15/2013 08:14'!
+mostrarAyuda
+	| sh |
+	'Muestra un workspace con ayuda'.
+	sh := StringHolder new textContents: 'Esta es la lista de tareas pendientes.
+
+Las pendientes-urgentes se muestran en rojo.
+Las pendientes normales en amarillo.
+Las tareas terminadas se muestran en verde.
+
+Por supuesto, lo de los colores y estados de las tareas, aún falta implementar.
+
+Programado por: Germán S. Arduino
+Fecha: Octubre 2003
+
+Visite: http://www.arsol.net - http://www.arsol.biz
+' withSqueakLineEndings;
+				 openLabel: 'Ayuda de Tareas'.
+	sh topView extent: 350 @ (Display height - 220).
+	"sh topView position: Display width - 220 @ 20."
+	"sh topView beSticky."
+	"sh topView collapse."
+	sh topView position: Display width - 380 @ 20! !
+
+!MiniToDo methodsFor: 'user interface' stamp: 'gsa 11/15/2013 08:14'!
+openAViewOnMe
+	| window aListMorph |
+	aListMorph := PluggableListMorph
+				on: self
+				list: #list
+				selected: #listIndex
+				changeSelected: #listIndex:
+				menu: #listMenu:.
+	"I am the model that has a list to display"
+	"This is how the morph gets the list from me"
+	"This is how the morph knows which item to highlight"
+	"This is how the morph informs me of a user selection"
+	"This is how the morph requests a menu for the list"
+	aListMorph color: Color gray.
+	window := SystemWindow labelled: 'Tareas Pendientes Small-Land'.
+	window color: Color lightGray;
+		
+		addMorph: aListMorph
+		frame: (0 @ 0 corner: 1 @ 1).
+	^ window openInWorldExtent: 420 @ 220! !
+
+!MiniToDo methodsFor: 'updating' stamp: 'gsa 11/15/2013 08:14'!
+refreshList
+	list := (self tareas
+				collect: [:each | each descripcion])
+				asSortedCollection: [:a :b | a = b].
+	selectedIndex := 1.
+	self changed: #list! !
+
+!MiniToDo methodsFor: 'accessing' stamp: 'gsa 11/15/2013 08:50'!
+tasks
+	"Returns the receiver's tareas."
+	tasks isNil
+		ifTrue: [self initializeTasks].
+	^ tasks! !
+
+!MiniToDo methodsFor: 'accessing' stamp: 'gsa 11/15/2013 08:48'!
+tasks: anObject
+	tasks := anObject.
+! !
+
+!SistemaTareas methodsFor: 'adding' stamp: 'GermanArduino 11/1/2010 10:00'!
+agregarTarea
+	| x newDescription |
+	x := Tarea new.
+	newDescription := FillInTheBlankMorph request: 'Ingrese la nueva Tarea'.
+	"Lo siguientes es para evitar descripciones en blanco"
+	"Falta ver si se puede detectar de mejor forma si se presionó el 
+	Cancel del FillInTheBlank"
+	newDescription size = 0
+		ifFalse: [x descripcion: newDescription.
+			self tareas add: x.
+			self refreshList]! !
+
+!SistemaTareas methodsFor: 'adding' stamp: 'gsa 10/13/2003 10:19'!
+agregarTareas
+	| x |
+	x := Tarea new.
+	x descripcion: 'Actualizar ToDos SmallLand'.
+	self tareas add: x.
+	x := Tarea new.
+	x descripcion: 'Actualizar Tutorial Presentaciones'.
+	self tareas add: x.
+	x := Tarea new.
+	x descripcion: 'Ver OSProcess'.
+	self tareas add: x.
+	x := Tarea new.
+	x descripcion: 'Ver tema Live Linux con Squeak como WM'.
+	self tareas add: x! !
+
+!SistemaTareas methodsFor: 'objects from disk' stamp: 'gsa 6/26/2006 14:03'!
+createHtmlTaskList
+
+| dir fileName |
+
+fileName := 'mistareas.html'.
+
+dir := FileDirectory default.
+
+(dir fileExists: fileName) ifTrue:[ dir deleteFileNamed: fileName ].
+
+fileName := dir newFileNamed: fileName.
+
+fileName nextPutAll: '<html>';cr; nextPut: Character lf;
+	nextPutAll: '<head>';cr; nextPut: Character lf;
+	nextPutAll: '<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">';cr; nextPut: Character lf;
+	nextPutAll: '<title>Tareas Pendientes</title>';cr; nextPut: Character lf;
+	nextPutAll: '</head>';cr; nextPut: Character lf;
+	nextPutAll: '<body>';cr; nextPut: Character lf;
+	nextPutAll: '<h2>Tareas Pendientes</h2>';cr; nextPut: Character lf;
+	nextPutAll: '<hr>';cr;nextPut: Character lf;
+	nextPutAll: '<ul>';cr; nextPut: Character lf.
+
+	"nextPutAll: '<li>',newCollection,'</li>';cr; nextPut: Character lf;"
+
+ 	self  tareas do: [:each | fileName nextPutAll: '<li>',each descripcion,'</li>';cr; nextPut: Character lf.].
+
+
+	"nextPutAll: (self tareas do: [:each | '<li>',each descripcion,'</li>';cr; nextPut: Character lf]); "
+
+fileName
+	nextPutAll: '</ul>';cr; nextPut: Character lf;
+	nextPutAll: '</body>';cr; nextPut: Character lf;
+	nextPutAll: '</html>';cr; nextPut: Character lf;
+	nextPutAll: '<hr>','Generado por MiniToDo','<hr>';cr; nextPut: Character lf.
+fileName  close.
+"Win32Shell new shellOpen: fileName."
+
+
+
+
+
+
+
+
+
+! !
+
+!SistemaTareas methodsFor: 'objects from disk' stamp: 'gsa 6/23/2006 14:19'!
+dataIn
+|rr|
+rr := ReferenceStream fileNamed: 'SistemaTareas.obj'.
+self tareas: rr next.
+rr close.
+
+self refreshList.
+
+! !
+
+!SistemaTareas methodsFor: 'objects from disk' stamp: 'gsa 6/23/2006 13:54'!
+dataOut
+|rr|
+rr := ReferenceStream fileNamed: 'SistemaTareas.obj'.
+rr nextPut: self tareas.
+rr close.
+! !
+
+!SistemaTareas methodsFor: 'removing' stamp: 'gsa 10/13/2003 12:17'!
+eliminarTarea
+	| aTask aTaskDescription |
+	aTaskDescription := list at: selectedIndex.
+	aTask := (self tareas
+				detect: [:each | each descripcion = aTaskDescription]).
+	tareas remove: aTask.
+	self refreshList! !
+
+!SistemaTareas methodsFor: 'initializing' stamp: 'gsa 7/21/2003 20:54'!
+initialize
+	self agregarTareas.
+	list := (self tareas
+				collect: [:each | each descripcion])
+				asSortedCollection: [:a :b | a = b].
+	selectedIndex := 1! !
+
+!SistemaTareas methodsFor: 'initializing' stamp: 'gsa 10/13/2003 12:17'!
+initializeTareas
+	"Private - Initializes the receiver's tareas."
+	tareas := Bag new! !
+
+!SistemaTareas methodsFor: 'accessing' stamp: 'gsa 7/21/2003 19:23'!
+list
+	^list! !
+
+!SistemaTareas methodsFor: 'accessing' stamp: 'gsa 7/21/2003 19:19'!
+listIndex
+	^ selectedIndex! !
+
+!SistemaTareas methodsFor: 'accessing' stamp: 'gsa 10/12/2003 21:56'!
+listIndex: anInteger 
+	selectedIndex := anInteger.
+		self changed: #listIndex! !
+
+!SistemaTareas methodsFor: 'user interface' stamp: 'GermanArduino 11/1/2010 09:40'!
+listMenu: aMenu 
+	"-------------------------------------------------------------------------------------"
+	"Si el menu se despliega sin ninguna tarea seleccionada sólo  
+	ofrece la posibilidad de Agregar Tarea"
+	"-------------------------------------------------------------------------------------"
+	"Aqui también identifico targetTask, la tarea seleccionada,  
+	sobre la cual operamos"
+	"-------------------------------------------------------------------------------------"
+	| differentMenu targetTask tinyMenu |
+	self.
+	targetTask := list
+				at: selectedIndex
+				ifAbsent: [tinyMenu := MenuMorph new.
+					tinyMenu
+						add: 'Agregar Tarea'
+						target: self
+						selector: #agregarTarea;
+						add: 'Ayuda'
+						target: self
+						selector: #mostrarAyuda.
+					^ tinyMenu].
+	differentMenu := MenuMorph new.
+	"selector indica el método que se ejecuta en target"
+	differentMenu
+		add: 'Agregar Tarea'
+		target: self
+		selector: #agregarTarea;
+		
+		add: 'Eliminar Tarea'
+		target: self
+		selector: #eliminarTarea;
+		
+		add: 'Modificar Tarea'
+		target: self
+		selector: #modificarTarea;
+
+		add: 'Generar Lista de Tareas como p·gina web'
+		target: self
+		selector: #createHtmlTaskList;
+		
+		add: 'Ayuda'
+		target: self
+		selector: #mostrarAyuda;
+
+		add: 'Exportar Tareas'
+		target: self
+		selector: #dataOut;
+		
+		add: 'Importar Tareas'
+		target: self
+		selector: #dataIn;
+
+		add: 'explore'
+		target: targetTask
+		selector: #explore.
+	^ differentMenu! !
+
+!SistemaTareas methodsFor: 'updating' stamp: 'GermanArduino 11/1/2010 10:01'!
+modificarTarea
+	| aTask aTaskDescription aTaskNewDescription |
+	aTaskDescription := list at: selectedIndex.
+	aTask := self tareas
+				detect: [:each | each descripcion = aTaskDescription].
+	aTaskNewDescription := FillInTheBlankMorph request: 'Modifique la descripción de la Tarea' initialAnswer: aTaskDescription.
+	"Lo siguiente es para evitar descripciones en blanco"
+	"Falta ver si se puede detectar de mejor forma si se presionó el  
+	Cancel del FillInTheBlank"
+	aTaskNewDescription size = 0
+		ifFalse: [aTask descripcion: aTaskNewDescription.
+			self refreshList]! !
+
+!SistemaTareas methodsFor: 'help' stamp: 'gsa 2/7/2004 10:18'!
+mostrarAyuda
+	| sh |
+	'Muestra un workspace con ayuda'.
+	sh := StringHolder new textContents: 'Esta es la lista de tareas pendientes.
+
+Las pendientes-urgentes se muestran en rojo.
+Las pendientes normales en amarillo.
+Las tareas terminadas se muestran en verde.
+
+Por supuesto, lo de los colores y estados de las tareas, aún falta implementar.
+
+Programado por: Germán S. Arduino
+Fecha: Octubre 2003
+
+Visite: http://www.arsol.net - http://www.arsol.biz
+' withSqueakLineEndings;
+				 openLabel: 'Ayuda de Tareas'.
+	sh topView extent: 350 @ (Display height - 220).
+	"sh topView position: Display width - 220 @ 20."
+	"sh topView beSticky."
+	"sh topView collapse."
+	sh topView position: Display width - 380 @ 20! !
+
+!SistemaTareas methodsFor: 'user interface' stamp: 'gsa 10/13/2003 10:21'!
+openAViewOnMe
+	| window aListMorph |
+	aListMorph := PluggableListMorph
+				on: self
+				list: #list
+				selected: #listIndex
+				changeSelected: #listIndex:
+				menu: #listMenu:.
+	"I am the model that has a list to display"
+	"This is how the morph gets the list from me"
+	"This is how the morph knows which item to highlight"
+	"This is how the morph informs me of a user selection"
+	"This is how the morph requests a menu for the list"
+	aListMorph color: Color gray.
+	window := SystemWindow labelled: 'Tareas Pendientes Small-Land'.
+	window color: Color lightGray;
+		
+		addMorph: aListMorph
+		frame: (0 @ 0 corner: 1 @ 1).
+	^ window openInWorldExtent: 420 @ 220! !
+
+!SistemaTareas methodsFor: 'updating' stamp: 'gsa 10/13/2003 10:14'!
+refreshList
+	list := (self tareas
+				collect: [:each | each descripcion])
+				asSortedCollection: [:a :b | a = b].
+	selectedIndex := 1.
+	self changed: #list! !
+
+!SistemaTareas methodsFor: 'accessing' stamp: 'gsa 7/21/2003 19:07'!
+tareas
+	"Returns the receiver's tareas."
+	tareas isNil
+		ifTrue: [self initializeTareas].
+	^ tareas! !
+
+!SistemaTareas methodsFor: 'accessing' stamp: 'gsa 6/23/2006 14:15'!
+tareas: anObject
+	tareas := anObject.
+! !
+
+!Tarea methodsFor: 'accessing' stamp: 'gsa 7/21/2003 20:52'!
+descripcion
+	^descripcion! !
+
+!Tarea methodsFor: 'accessing' stamp: 'gsa 10/12/2003 21:24'!
+descripcion: anObject 
+	descripcion := anObject.
+	self changed: #descripcion! !
+
+!Task methodsFor: 'accessing' stamp: 'gsa 11/15/2013 08:14'!
+description
+	"Answer the value of description"
+
+	^ description! !
+
+!Task methodsFor: 'accessing' stamp: 'gsa 11/15/2013 08:14'!
+description: anObject
+	"Set the value of description"
+
+	description _ anObject! !
