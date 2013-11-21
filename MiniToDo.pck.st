@@ -1,14 +1,24 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #1867] on 15 November 2013 at 2:11:11.314112 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #1867] on 21 November 2013 at 1:38:05.695181 pm'!
 'Description Please enter a description for this package'!
-!provides: 'MiniToDo' 1 2!
+!provides: 'MiniToDo' 1 3!
 !classDefinition: #MiniToDo category: #MiniToDo!
-Object subclass: #MiniToDo
+ActiveModel subclass: #MiniToDo
 	instanceVariableNames: 'tasks list selectedIndex'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'MiniToDo'!
 !classDefinition: 'MiniToDo class' category: #MiniToDo!
 MiniToDo class
+	instanceVariableNames: ''!
+
+!classDefinition: #MiniToDoWindow category: #MiniToDo!
+MessageSetWindow subclass: #MiniToDoWindow
+	instanceVariableNames: 'textMorph'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'MiniToDo'!
+!classDefinition: 'MiniToDoWindow class' category: #MiniToDo!
+MiniToDoWindow class
 	instanceVariableNames: ''!
 
 !classDefinition: #SistemaTareas category: #MiniToDo!
@@ -58,6 +68,9 @@ SistemaTareas new initialize openAViewOnMe
 Programmer: Germ‡n S. Arduino
 Date: Octubre 2003
 Last Modificaton: February 2004!
+
+!MiniToDoWindow commentStamp: '<historical>' prior: 0!
+Morphic view for MessageNames models. See category 'GUI building'.!
 
 !SistemaTareas commentStamp: 'gsa 2/7/2004 10:20' prior: 0!
 Very simple task administration system.
@@ -303,7 +316,7 @@ Visite: http://www.arsol.net - http://www.arsol.biz
 	"sh topView collapse."
 	sh topView position: Display width - 380 @ 20! !
 
-!MiniToDo methodsFor: 'user interface' stamp: 'gsa 11/15/2013 14:07'!
+!MiniToDo methodsFor: 'user interface' stamp: 'gsa 11/15/2013 14:21'!
 openAViewOnMe
 	| window aListMorph |
 "	aListMorph := PluggableListMorph
@@ -361,6 +374,82 @@ tasks
 tasks: anObject
 	tasks := anObject.
 ! !
+
+!MiniToDoWindow methodsFor: 'GUI building' stamp: 'gsa 11/21/2013 13:35'!
+buildMorphicWindow
+	"Answer a morphic window with the given initial search string, nil if none"
+
+"MessageNames openMessageNames"
+
+	| selectorListView firstRow searchButton secondRow |
+	textMorph _ TextModelMorph
+		textProvider: model
+		textGetter: #searchString 
+		textSetter: #searchString:
+		selectionGetter: #contentsSelection
+		allowStyler: false.
+	textMorph textMorph setProperty: #alwaysAccept toValue: true.
+	textMorph askBeforeDiscardingEdits: false.
+	textMorph acceptOnCR: true.
+	textMorph setTextColor: Color brown.
+	textMorph hideScrollBarsIndefinitely.
+
+	searchButton _ PluggableButtonMorph new 
+		model: textMorph textMorph;
+		label: 'Search';
+		action: #acceptContents.
+	searchButton setBalloonText: 'Type some letters into the pane at right, and then press this Search button (or hit RETURN) and all method selectors that match what you typed will appear in the list pane below.  Click on any one of them, and all the implementors of that selector will be shown in the right-hand pane, and you can view and edit their code without leaving this tool.'.
+
+	firstRow _ LayoutMorph newRow.
+	firstRow
+		addMorph: searchButton proportionalWidth: 0.25;
+		addMorph: textMorph proportionalWidth: 0.75.
+
+	selectorListView _ PluggableListMorph
+		model: model
+		listGetter: #selectorList
+		indexGetter: #selectorListIndex
+		indexSetter: #selectorListIndex:
+		mainView: self
+		menuGetter: #selectorListMenu
+		keystrokeAction: #selectorListKey:from:.
+	secondRow _  LayoutMorph newRow.
+	secondRow
+		addMorph: selectorListView proportionalWidth: 0.5;
+		addAdjusterAndMorph: self buildMorphicMessageList proportionalWidth: 0.5.
+
+	self layoutMorph
+		addMorph: firstRow fixedHeight: self defaultButtonPaneHeight+4;
+		addAdjusterAndMorph: secondRow proportionalHeight: 0.5;
+		addAdjusterAndMorph: self buildLowerPanes proportionalHeight: 0.5.
+	model changed: #editSelection! !
+
+!MiniToDoWindow methodsFor: 'keyboard shortcuts' stamp: 'gsa 11/21/2013 13:35'!
+selectorListKey: aChar from: view
+	"Respond to a Command key in the message-list pane."
+	aChar == $n ifTrue: [ ^ self browseSenders ].
+	aChar == $b ifTrue: [ ^ self browseMethodFull ].
+	aChar == $m ifTrue: [ ^ self browseImplementors ].! !
+
+!MiniToDoWindow methodsFor: 'menu building' stamp: 'gsa 11/21/2013 13:35'!
+selectorListMenu
+	"Answer the menu associated with the selectorList"
+
+	| aMenu |
+	aMenu _ MenuMorph new defaultTarget: self.
+	aMenu addList: #(
+		('senders (n)'	browseSenders	'browse senders of the chosen selector')
+	).
+
+	^ aMenu! !
+
+!MiniToDoWindow methodsFor: 'GUI building' stamp: 'gsa 11/21/2013 13:35'!
+submorphToFocusKeyboard
+	^textMorph textMorph! !
+
+!MiniToDoWindow methodsFor: 'GUI building' stamp: 'gsa 11/21/2013 13:35'!
+windowColor
+	^ Theme current messageNames! !
 
 !SistemaTareas methodsFor: 'adding' stamp: 'GermanArduino 11/1/2010 10:00'!
 agregarTarea
