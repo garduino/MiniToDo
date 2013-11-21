@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #1867] on 21 November 2013 at 1:38:05.695181 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #1867] on 21 November 2013 at 2:18:36.687181 pm'!
 'Description Please enter a description for this package'!
-!provides: 'MiniToDo' 1 3!
+!provides: 'MiniToDo' 1 4!
 !classDefinition: #MiniToDo category: #MiniToDo!
 ActiveModel subclass: #MiniToDo
 	instanceVariableNames: 'tasks list selectedIndex'
@@ -375,8 +375,47 @@ tasks: anObject
 	tasks := anObject.
 ! !
 
-!MiniToDoWindow methodsFor: 'GUI building' stamp: 'gsa 11/21/2013 13:35'!
+!MiniToDoWindow methodsFor: 'GUI building' stamp: 'gsa 11/21/2013 14:03'!
 buildMorphicWindow
+	| window aListMorph |
+"	aListMorph := PluggableListMorph
+				on: self
+				list: #list
+				selected: #listIndex
+				changeSelected: #listIndex:
+				menu: #listMenu:."
+				
+	aListMorph := PluggableListMorph		
+						model: self
+		listGetter: #list
+		indexGetter: #listIndex
+		indexSetter: #listIndex:
+		mainView: self
+		menuGetter: #listMenu
+		keystrokeAction: #messageListKey:from:.
+		
+	"I am the model that has a list to display"
+	"This is how the morph gets the list from me"
+	"This is how the morph knows which item to highlight"
+	"This is how the morph informs me of a user selection"
+	"This is how the morph requests a menu for the list"
+	aListMorph color: Color gray.
+	
+	
+	window := SystemWindow new setLabel: 'My ToDo List'.	
+	
+	
+	window color: Color lightGray.
+	
+	
+	window addMorph: aListMorph.
+		"frame: (0 @ 0 corner: 1 @ 1)."
+	"^ window openInWorldExtent: 420 @ 220"
+		^ window openInWorld.
+	! !
+
+!MiniToDoWindow methodsFor: 'GUI building' stamp: 'gsa 11/21/2013 14:02'!
+buildMorphicWindowORI
 	"Answer a morphic window with the given initial search string, nil if none"
 
 "MessageNames openMessageNames"
